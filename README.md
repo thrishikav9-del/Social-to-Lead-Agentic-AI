@@ -1,172 +1,55 @@
-# Social-to-Lead Agentic Workflow (AutoStream AI Agent)
+# Social-to-Lead Agentic Workflow for AutoStream
 
-## Overview
+This repository contains a production-ready conversational AI agent built for AutoStream, a fictional SaaS product for video creators. The agent uses RAG to answer product questions and LangGraph state management to classify intents and conditionally execute a mock backend tool only after collecting high-intent user details (Name, Email, Creator Platform).
 
-This project implements a GenAI-powered conversational AI agent for a fictional SaaS product AutoStream, designed to convert user conversations into qualified business leads.
+## 🚀 Setup & Run Instructions
 
-Unlike traditional chatbots, this system integrates:
+**1. Clone the repository and navigate to the directory**
+Navigate to this folder in your terminal.
 
-* Intent Detection
-* RAG (Retrieval-Augmented Generation)
-* Stateful Conversation Flow
-* Tool Execution for Lead Capture
-
-The agent simulates a real-world AI sales assistant that interacts with users, answers product queries, and captures leads when high intent is detected.
-
----
-
-## Features
-
-### 1. Intent Detection
-
-Classifies user input into:
-
-* Greeting
-* Product Inquiry
-* High Intent (Ready to purchase)
-
----
-
-### 2. RAG-Based Knowledge Retrieval
-
-The agent answers queries using a local knowledge base instead of hardcoded responses.
-
-Includes:
-
-* Pricing plans
-* Features
-* Company policies
-
----
-
-### 3. Lead Qualification System
-
-When a user shows high intent, the agent:
-
-* Collects:
-
-  * Name
-  * Email
-  * Creator Platform
-* Maintains conversation memory across multiple turns
-
----
-
-### 4. Tool Execution
-
-After collecting all required details:
-
-```python
-def mock_lead_capture(name, email, platform):
-    print(f"Lead captured successfully: {name}, {email}, {platform}")
-```
-
-Ensures:
-
-* No premature execution
-* Proper validation
-* Single trigger
-
----
-
-## Tech Stack
-
-* Language: Python 3.9+
-* Framework: LangChain / LangGraph
-* LLM: Google Gemini / OpenAI (configurable)
-* Embeddings: HuggingFace (all-MiniLM-L6-v2)
-* Vector Store: FAISS / In-memory
-* State Management: Conversation memory buffers
-
----
-
-## Project Structure
-
-```
-AutoStream-Agentic-Workflow/
-│── main.py                  # Entry point
-│── rag_pipeline.py          # RAG logic
-│── intent_classifier.py     # Intent detection
-│── lead_handler.py          # Lead flow handling
-│── tools.py                 # Tool execution
-│── knowledge_base.json      # Local data source
-│── requirements.txt         # Dependencies
-│── README.md                # Documentation
-│── demo_outputs/            # Screenshots of outputs
-```
-
----
-
-## How to Run Locally
-
-### 1. Clone Repository
-
-```
-git clone https://github.com/yourusername/AutoStream-Agentic-Workflow.git
-cd AutoStream-Agentic-Workflow
-```
-
----
-
-### 2. Create Virtual Environment
-
-```
+**2. Create a virtual environment**
+```bash
 python -m venv venv
-venv\Scripts\activate   # Windows
+# On Windows:
+venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
 ```
 
----
-
-### 3. Install Dependencies
-
-```
+**3. Install dependencies**
+```bash
 pip install -r requirements.txt
 ```
 
----
-
-### 4. Set API Key
-
-For Gemini:
-
-```
-set GOOGLE_API_KEY=your_api_key
-```
-
-OR for OpenAI:
-
-```
-set OPENAI_API_KEY=your_api_key
+**4. Set your API Key**
+```bash
+# Set your Gemini API key (since we use gemini-1.5-flash)
+# On Windows
+set GOOGLE_API_KEY=your_key_here
+# On Mac/Linux
+export GOOGLE_API_KEY=your_key_here
 ```
 
----
-
-### 5. Run the Agent
-
-```
+**5. Run the application**
+```bash
 python main.py
 ```
 
----
+## 🧠 Architecture Explanation
 
-## Example Conversation Flow
+This agent is built using **LangGraph** because it provides robust, cyclic state management essential for complex multi-turn conversations, unlike linear chains or standard autonomous agents which can get stuck in loops or lose critical memory context. 
 
-```
-User: What is your pricing?
-Agent: AutoStream offers Basic ($29) and Pro ($79) plans.
+The architecture centers around a shared `AgentState` containing the conversation history, detected intent, and extracted lead data. 
+- The **Entry Node** classification engine uses structured LLM output to accurately parse the user's latest message against the full history, outputting `greeting`, `product_inquiry`, or `high_intent`. 
+- **Routing** dynamically shifts the user: if product inquiry, the flow moves to the RAG Node (FAISS + HuggingFace Embeddings reading the local JSON). 
+- If high intent is detected, it hits the **Lead Collection Node**. Here, structured LLM extraction pulls existing entities (Name, Email, Platform) from memory. If missing, it instructs the LLM to conversationally prompt the user for the missing fields, terminating the turn. 
+- Only once all three variables are populated does the graph route to the **Tool Execution Node**, validating and executing the mock backend callback, guaranteeing state safety.
 
-User: I want to try the Pro plan
-Agent: Great! Can I have your name?
+## 📡 WhatsApp Webhooks Integration
 
-User: Thrishika
-Agent: Please share your email.
+To integrate this agent with WhatsApp, we would deploy this LangGraph application via FastAPI. 
 
-User: thrishika@gmail.com
-Agent: Which platform do you create content on?
-
-User: YouTube
-
-Agent: Lead captured successfully: Thrishika, thrishika@gmail.com, YouTube
-```
-
----
+1. **Webhook Endpoint:** Expose a `POST /webhook` endpoint that Meta's WhatsApp API can call when an inbound user message is received.
+2. **Session Persistence:** Store the LangGraph `AgentState` in a fast key-value store (like Redis or MongoDB) keyed by the user's WhatsApp phone number.
+3. **Graph Execution:** Upon receiving a webhook, load the state from the external store, append the new `HumanMessage`, and execute `app.invoke(state)`. 
+4. **Sending Replies:** Extract the resulting `AIMessage` from the updated state, save the state back, and trigger Meta's Outbound Messaging API to send the text sequentially back to the WhatsApp user.

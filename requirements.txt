@@ -1,0 +1,9 @@
+langgraph
+langchain
+langchain-core
+langchain-google-genai
+langchain-huggingface
+langchain-community
+faiss-cpu
+pydantic
+python-dotenv
