@@ -159,7 +159,7 @@ Social-to-Lead-Agentic-AI/
 ### Clone the repository
 
 ```bash
-git clone https://github.com/your-username/Social-to-Lead-Agentic-AI.git
+git clone https://github.com/thrishikav9-del/Social-to-Lead-Agentic-AI.git
 
 cd Social-to-Lead-Agentic-AI
 ```
