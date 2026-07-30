@@ -1,55 +1,313 @@
-# Social-to-Lead Agentic Workflow for AutoStream
+# Social-to-Lead Agentic AI
 
-This repository contains a production-ready conversational AI agent built for AutoStream, a fictional SaaS product for video creators. The agent uses RAG to answer product questions and LangGraph state management to classify intents and conditionally execute a mock backend tool only after collecting high-intent user details (Name, Email, Creator Platform).
+**GenAI-Powered Conversational Agent for Intelligent Lead Qualification**
 
-## 🚀 Setup & Run Instructions
+Social-to-Lead Agentic AI is a conversational AI system that combines Retrieval-Augmented Generation (RAG), intent classification, and LangGraph-based state management to provide intelligent product assistance while automatically identifying and qualifying potential customer leads.
 
-**1. Clone the repository and navigate to the directory**
-Navigate to this folder in your terminal.
+The system maintains multi-turn conversations, retrieves relevant information from a knowledge base, and collects lead information only when high purchase intent is detected, enabling a structured and context-aware customer engagement workflow.
 
-**2. Create a virtual environment**
+---
+
+## Overview
+
+Modern conversational AI systems must do more than answer user queries. They need to understand user intent, maintain conversational context, retrieve domain-specific knowledge, and identify potential customers for business workflows.
+
+Social-to-Lead Agentic AI addresses these challenges by integrating Retrieval-Augmented Generation (RAG), structured intent detection, entity extraction, and workflow orchestration into a unified conversational agent. The system dynamically routes users through different conversation paths based on their intent while preserving conversation state across multiple interactions.
+
+---
+
+## Key Features
+
+- Retrieval-Augmented Generation (RAG) for product-specific question answering
+- Intent classification using structured LLM outputs
+- LangGraph-based multi-turn conversation management
+- Automated lead qualification workflow
+- Context-aware entity extraction
+- Conditional backend tool execution
+- Local knowledge base retrieval using vector search
+- Extensible architecture for business automation
+
+---
+
+## System Architecture
+
+The conversational workflow follows a state-driven architecture powered by LangGraph.
+
+```text
+                    User Query
+                         │
+                         ▼
+               Intent Classification
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+   Greeting        Product Inquiry    High Intent
+                         │                │
+                         ▼                ▼
+                 RAG Retrieval      Lead Collection
+                         │                │
+                         └──────┬─────────┘
+                                ▼
+                      Tool Execution
+                                │
+                                ▼
+                     Response Generation
+```
+
+The workflow ensures that backend actions are executed only after all required lead information has been collected and validated.
+
+---
+
+## Core Components
+
+### Intent Classification
+
+The intent classification module analyzes the user's message together with the conversation history and categorizes each interaction into one of the supported intents:
+
+- Greeting
+- Product Inquiry
+- High Purchase Intent
+
+This enables intelligent routing throughout the conversation.
+
+---
+
+### Retrieval-Augmented Generation (RAG)
+
+The RAG pipeline retrieves relevant information from a local knowledge base using vector embeddings before generating responses.
+
+Components include:
+
+- HuggingFace Embeddings
+- FAISS Vector Store
+- Local JSON Knowledge Base
+
+This approach improves factual consistency and reduces hallucinations.
+
+---
+
+### Lead Qualification
+
+When purchase intent is detected, the system automatically begins collecting essential lead information, including:
+
+- Name
+- Email Address
+- Creator Platform
+
+Missing information is requested conversationally while maintaining context across multiple interactions.
+
+---
+
+### State Management
+
+LangGraph manages the entire conversational workflow through a shared state object containing:
+
+- Conversation history
+- Detected intent
+- Lead information
+- Tool execution status
+
+This enables reliable multi-turn conversations without losing context.
+
+---
+
+### Tool Execution
+
+Backend tools are executed only after all required lead information has been successfully collected and validated.
+
+This conditional execution ensures workflow consistency and prevents incomplete lead submissions.
+
+---
+
+## Technology Stack
+
+| Category | Technology |
+|-----------|------------|
+| Programming Language | Python |
+| Large Language Model | Gemini 1.5 Flash |
+| AI Framework | LangChain |
+| Workflow Orchestration | LangGraph |
+| Vector Database | FAISS |
+| Embeddings | HuggingFace Embeddings |
+| Knowledge Base | JSON |
+| Backend (Deployment) | FastAPI (Planned) |
+
+---
+
+## Project Structure
+
+```text
+Social-to-Lead-Agentic-AI/
+│
+├── main.py
+├── intent_classifier.py
+├── rag_pipeline.py
+├── lead_handler.py
+├── tools.py
+├── knowledge_base.json
+├── requirements.txt
+├── output_demo/
+├── README.md
+└── LICENSE
+```
+
+---
+
+## Installation
+
+### Clone the repository
+
+```bash
+git clone https://github.com/your-username/Social-to-Lead-Agentic-AI.git
+
+cd Social-to-Lead-Agentic-AI
+```
+
+### Create a virtual environment
+
 ```bash
 python -m venv venv
-# On Windows:
+```
+
+Windows
+
+```bash
 venv\Scripts\activate
-# On Mac/Linux:
+```
+
+Linux / macOS
+
+```bash
 source venv/bin/activate
 ```
 
-**3. Install dependencies**
+### Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-**4. Set your API Key**
+### Configure API Key
+
+Windows
+
 ```bash
-# Set your Gemini API key (since we use gemini-1.5-flash)
-# On Windows
-set GOOGLE_API_KEY=your_key_here
-# On Mac/Linux
-export GOOGLE_API_KEY=your_key_here
+set GOOGLE_API_KEY=your_api_key
 ```
 
-**5. Run the application**
+Linux / macOS
+
+```bash
+export GOOGLE_API_KEY=your_api_key
+```
+
+### Run the application
+
 ```bash
 python main.py
 ```
 
-## 🧠 Architecture Explanation
+---
 
-This agent is built using **LangGraph** because it provides robust, cyclic state management essential for complex multi-turn conversations, unlike linear chains or standard autonomous agents which can get stuck in loops or lose critical memory context. 
+## Example Conversation
 
-The architecture centers around a shared `AgentState` containing the conversation history, detected intent, and extracted lead data. 
-- The **Entry Node** classification engine uses structured LLM output to accurately parse the user's latest message against the full history, outputting `greeting`, `product_inquiry`, or `high_intent`. 
-- **Routing** dynamically shifts the user: if product inquiry, the flow moves to the RAG Node (FAISS + HuggingFace Embeddings reading the local JSON). 
-- If high intent is detected, it hits the **Lead Collection Node**. Here, structured LLM extraction pulls existing entities (Name, Email, Platform) from memory. If missing, it instructs the LLM to conversationally prompt the user for the missing fields, terminating the turn. 
-- Only once all three variables are populated does the graph route to the **Tool Execution Node**, validating and executing the mock backend callback, guaranteeing state safety.
+**User**
 
-## 📡 WhatsApp Webhooks Integration
+> Hi, what is AutoStream?
 
-To integrate this agent with WhatsApp, we would deploy this LangGraph application via FastAPI. 
+**Assistant**
 
-1. **Webhook Endpoint:** Expose a `POST /webhook` endpoint that Meta's WhatsApp API can call when an inbound user message is received.
-2. **Session Persistence:** Store the LangGraph `AgentState` in a fast key-value store (like Redis or MongoDB) keyed by the user's WhatsApp phone number.
-3. **Graph Execution:** Upon receiving a webhook, load the state from the external store, append the new `HumanMessage`, and execute `app.invoke(state)`. 
-4. **Sending Replies:** Extract the resulting `AIMessage` from the updated state, save the state back, and trigger Meta's Outbound Messaging API to send the text sequentially back to the WhatsApp user.
+> AutoStream is an AI-powered platform designed to help video creators streamline content production and publishing.
+
+---
+
+**User**
+
+> I'm interested in using it.
+
+**Assistant**
+
+> Great! May I know your name?
+
+---
+
+**User**
+
+> John
+
+**Assistant**
+
+> Thanks, John. Could you also share your email address?
+
+---
+
+**User**
+
+> john@email.com
+
+**Assistant**
+
+> Perfect. Finally, which creator platform do you primarily use?
+
+---
+
+After all required information is collected, the workflow automatically executes the backend lead processing tool.
+
+---
+
+## Future Deployment
+
+The system can be extended into a production-ready customer support platform by integrating:
+
+- FastAPI REST backend
+- WhatsApp Business API
+- Redis or MongoDB for conversation persistence
+- Cloud deployment on AWS, Azure, or Google Cloud
+- CRM integration for automated lead management
+
+---
+
+## Future Enhancements
+
+- Multi-agent collaboration
+- Memory optimization
+- Voice-based conversations
+- CRM integration
+- Analytics dashboard
+- Multi-language support
+- Human-in-the-loop escalation
+- Real-time monitoring
+
+---
+
+## Applications
+
+- AI Customer Support
+- Intelligent Lead Qualification
+- Sales Automation
+- Product Assistance
+- Business Process Automation
+- Conversational AI Research
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Disclaimer
+
+This project was developed for educational and research purposes to demonstrate conversational AI, Retrieval-Augmented Generation (RAG), workflow orchestration using LangGraph, and intelligent lead qualification.
+
+---
+
+## Author
+
+**Thrishika**
+
+B.Tech Computer Science and Engineering (Artificial Intelligence)
+
+Amrita Vishwa Vidyapeetham
